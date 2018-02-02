@@ -410,7 +410,14 @@ void Vision::analyzeBoard(){
 	//Must run for live video feed. Unsure if its useful for testing on images.
 	//TODO: Implement same for still image.
 
-	std::map<Vec3f, Scalar> intMap;
+	int size = circles.size();
+
+	int *intMap = new int[size];
+
+	for(int i = 0; i < size; i++){
+
+		intMap[i] = -1;
+	}
 
 	while(true){
 
@@ -421,24 +428,23 @@ void Vision::analyzeBoard(){
 
 		cvtColor(frame, gameBoard, CV_BGR2GRAY);
 
-		for(size_t i = 0; i < circles.size(); i++){
+		for(int i = 0; i < size; i++){
 		
 			Rect r(circles[i][0], circles[i][1], circles[i][2] * 2, circles[i][2] * 2);
 
-			if(r.x >= 0 && r.y >= 0 && r.width + r.x < frame.cols && r.height + r.y < frame.rows){
-			
+			if(r.x >= 0 && r.y >= 0 && r.width + r.x < frame.cols && r.height + r.y < frame.rows){	
 			
 				Mat roi(frame, r);
 				Scalar avgIntensity = mean(roi);
 				cout << avgIntensity.val[0] << endl;
 
-				if(intMap.find(circles[i]) == intMap.end()){
-					intMap.insert(std::pair<Vec3f, Scalar>(circles[i], avgIntensity));
+				if(intMap[i] == -1){
+					intMap[i] = avgIntensity.val[0];
 				}
 				else{
-					Scalar prevIntensity = intMap.find(circles[i])->second;
-					if(abs(prevIntensity.val[0] - avgIntensity.val[0]) <= intTolerance_){
-						intMap.at(circles[i]) = avgIntensity;
+					int prevIntensity = intMap[i];
+					if(abs(prevIntensity - avgIntensity.val[0]) <= intTolerance_){
+						intMap[i] = avgIntensity.val[0];
 					}
 					else{
 						cout << "Button lit up at: " << circles[i] << endl;
@@ -446,7 +452,6 @@ void Vision::analyzeBoard(){
 					}
 				}
 			}
-
 		}
 
 	}
